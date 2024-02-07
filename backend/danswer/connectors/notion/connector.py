@@ -11,6 +11,7 @@ import requests
 from retry import retry
 
 from danswer.configs.app_configs import INDEX_BATCH_SIZE
+from danswer.configs.app_configs import CONTINUE_ON_CONNECTOR_FAILURE
 from danswer.configs.app_configs import NOTION_CONNECTOR_ENABLE_RECURSIVE_PAGE_LOOKUP
 from danswer.configs.constants import DocumentSource
 from danswer.connectors.interfaces import GenerateDocumentsOutput
@@ -72,11 +73,13 @@ class NotionConnector(LoadConnector, PollConnector):
     def __init__(
         self,
         batch_size: int = INDEX_BATCH_SIZE,
+        continue_on_failure: bool = CONTINUE_ON_CONNECTOR_FAILURE,
         recursive_index_enabled: bool = NOTION_CONNECTOR_ENABLE_RECURSIVE_PAGE_LOOKUP,
         root_page_id: str | None = None,
     ) -> None:
         """Initialize with parameters."""
         self.batch_size = batch_size
+        self.continue_on_failure = continue_on_failure
         self.headers = {
             "Content-Type": "application/json",
             "Notion-Version": "2022-06-28",
@@ -108,6 +111,8 @@ class NotionConnector(LoadConnector, PollConnector):
             res.raise_for_status()
         except Exception as e:
             logger.exception(f"Error fetching blocks - {res.json()}")
+            if self.continue_on_failure:
+                return {"results": [], "next_cursor": None}
             raise e
         return res.json()
 
@@ -155,6 +160,8 @@ class NotionConnector(LoadConnector, PollConnector):
                 )
                 return {"results": [], "next_cursor": None}
             logger.exception(f"Error fetching database - {res.json()}")
+            if self.continue_on_failure:
+                return {"results": [], "next_cursor": None}
             raise e
         return res.json()
 
