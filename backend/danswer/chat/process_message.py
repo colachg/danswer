@@ -294,6 +294,7 @@ def stream_chat_message(
                             semantic_identifier=llm_doc.semantic_identifier,
                             source_type=llm_doc.source_type,
                             content=llm_doc.content,
+                            metadata_dict=llm_doc.metadata,
                             updated_at=llm_doc.updated_at,
                             ind=ind,
                         )
@@ -443,7 +444,7 @@ def stream_chat_message(
             if persona.llm_model_version_override:
                 llm_name = persona.llm_model_version_override
 
-            llm_max_input_tokens = get_max_input_tokens(llm_name)
+            llm_max_input_tokens = get_max_input_tokens(model_name=llm_name)
 
             llm_token_based_chunk_lim = max_document_percentage * llm_max_input_tokens
 

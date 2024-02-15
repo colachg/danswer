@@ -13,6 +13,8 @@ import { DanswerDocument } from "@/lib/search/interfaces";
 import { SearchSummary, ShowHideDocsButton } from "./SearchSummary";
 import { SourceIcon } from "@/components/SourceIcon";
 import { ThreeDots } from "react-loader-spinner";
+import { SkippedSearch } from "./SkippedSearch";
+import { SelectedDocuments } from "../modifiers/SelectedDocuments";
 
 export const Hoverable: React.FC<{
   children: JSX.Element;
@@ -39,6 +41,7 @@ export const AIMessage = ({
   isCurrentlyShowingRetrieved,
   handleShowRetrieved,
   handleSearchQueryEdit,
+  handleForceSearch,
 }: {
   messageId: number | null;
   content: string | JSX.Element;
@@ -50,6 +53,7 @@ export const AIMessage = ({
   isCurrentlyShowingRetrieved?: boolean;
   handleShowRetrieved?: (messageNumber: number | null) => void;
   handleSearchQueryEdit?: (query: string) => void;
+  handleForceSearch?: () => void;
 }) => {
   const [copyClicked, setCopyClicked] = useState(false);
   return (
@@ -94,6 +98,14 @@ export const AIMessage = ({
                     handleShowRetrieved={handleShowRetrieved}
                     handleSearchQueryEdit={handleSearchQueryEdit}
                   />
+                </div>
+              )}
+            {handleForceSearch &&
+              content &&
+              query === undefined &&
+              !hasDocs && (
+                <div className="my-1">
+                  <SkippedSearch handleForceSearch={handleForceSearch} />
                 </div>
               )}
 
