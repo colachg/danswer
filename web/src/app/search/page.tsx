@@ -95,6 +95,8 @@ export default async function Home() {
   }
   // remove those marked as hidden by an admin
   personas = personas.filter((persona) => persona.is_visible);
+  // hide personas with no retrieval
+  personas = personas.filter((persona) => persona.num_chunks !== 0);
   // sort them in priority order
   personas.sort(personaComparator);
 
@@ -113,7 +115,6 @@ export default async function Home() {
     embeddingModelVersionInfo?.current_model_name;
   const nextEmbeddingModelName =
     embeddingModelVersionInfo?.secondary_model_name;
-  console.log(embeddingModelVersionInfo);
 
   // needs to be done in a non-client side component due to nextjs
   const storedSearchType = cookies().get("searchType")?.value as

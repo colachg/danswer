@@ -3,7 +3,6 @@ import time
 from datetime import datetime
 
 import dask
-import torch
 from dask.distributed import Client
 from dask.distributed import Future
 from distributed import LocalCluster
@@ -28,6 +27,7 @@ from danswer.db.embedding_model import get_secondary_db_embedding_model
 from danswer.db.embedding_model import update_embedding_model_status
 from danswer.db.engine import get_db_current_time
 from danswer.db.engine import get_sqlalchemy_engine
+from danswer.db.index_attempt import cancel_indexing_attempts_past_model
 from danswer.db.index_attempt import count_unique_cc_pairs_with_index_attempts
 from danswer.db.index_attempt import create_index_attempt
 from danswer.db.index_attempt import get_index_attempt
@@ -60,6 +60,8 @@ def _get_num_threads() -> int:
     """Get # of "threads" to use for ML models in an indexing job. By default uses
     the torch implementation, which returns the # of physical cores on the machine.
     """
+    import torch
+
     return max(MIN_THREADS_ML_MODELS, torch.get_num_threads())
 
 
@@ -381,6 +383,9 @@ def check_index_swap(db_session: Session) -> None:
             db_session=db_session,
         )
 
+        # Expire jobs for the now past index/embedding model
+        cancel_indexing_attempts_past_model(db_session)
+
         # Recount aggregates
         for cc_pair in all_cc_pairs:
             resync_cc_pair(cc_pair, db_session=db_session)
@@ -453,6 +458,8 @@ def update__main() -> None:
     # needed for CUDA to work with multiprocessing
     # NOTE: needs to be done on application startup
     # before any other torch code has been run
+    import torch
+
     if not DASK_JOB_CLIENT_ENABLED:
         torch.multiprocessing.set_start_method("spawn")
 
